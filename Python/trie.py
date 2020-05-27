@@ -1,6 +1,6 @@
 class TrieNode:
     def __init__(self, value: str):
-        self.children : Dict[str, Node] = {}
+        self.children : Dict[str, TrieNode] = {}
         self.value = value
         self.is_end = False
 
