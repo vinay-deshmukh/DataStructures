@@ -42,5 +42,7 @@ class Trie{
 const trie = new Trie();
 trie.insert("abc");
 trie.insert("adc");
-console.log(trie.search("abc")); // True
-console.log(trie.search("cbv")); // False
+console.log(trie.search("abc", false)); // True
+console.log(trie.search("ab", true));   // True
+console.log(trie.search("cbv", false)); // False
+console.log(trie.search("cv", true));   // False
