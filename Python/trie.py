@@ -42,8 +42,10 @@ def main():
     '''Sample test cases to test the Trie Tree'''
     trie.insert('abc')
     trie.insert('adc')
-    print(trie.search('abc')) # True
-    print(trie.search('cbv')) # False
+    print(trie.search('abc', allow_prefix=False)) # True
+    print(trie.search('ab', allow_prefix=True))   # True
+    print(trie.search('cbv', allow_prefix=False)) # False
+    print(trie.search('cv', allow_prefix=True))   # False
 
 
 if __name__ == '__main__':
