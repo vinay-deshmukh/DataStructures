@@ -91,13 +91,14 @@ AVLNode* AVLTree::insertNode(AVLNode* node, int val) {
         } else {
             res = node->left = new AVLNode(val);
         }
-    } else if (val > node->val) {
+    } else if (val >= node->val) {
         if(node->right) {
             res = insertNode(node->right, val);
         } else {
             res = node->right = new AVLNode(val);
         }
     } else {
+        // TODO: remove this block
         res = node;
         std::cout << "already in" << std::endl;
     }
@@ -130,10 +131,13 @@ void preorderFunction(AVLNode* n, std::function<void(AVLNode*)> func) {
 
 
 void AVLTree::levelOrder(std::ostream& out) {
-    out << "yes" << std::endl;
-    // std::vector<std::vector<int>> levels;
-    std::queue<AVLNode*> bfs;
+    // TODO:
+    // if tree is left ladder or right ladder,
+    // then shave off all whitespace on one side of the root and return
 
+    out << "yes" << std::endl;
+    
+    
     std::vector<std::tuple<int, int, int>> levels;
     // Stores pairs of (depth, xval, value)
     /* where depth is y-coordinate
@@ -171,7 +175,7 @@ void AVLTree::levelOrder(std::ostream& out) {
     std::cout << "maxDepth" << maxDepth << '\n';
     std::cout << "where depth of root is 0\n";
 
-    // Both have to be odd, to center properly
+    // NOTE: Both have to be odd, to center properly
     const int WIDTH = 3; // Width of each node
     const int SPACE = 1; // Space between node at deepest level
 
@@ -180,16 +184,17 @@ void AVLTree::levelOrder(std::ostream& out) {
 
     const int p2n = 1 << maxDepth; // No of nodes at maxDepth ie 2^maxDepth
 
-    watch(p2n);
+    // watch(p2n);
 
     const int R = maxDepth + 1;                     // Rows for print string
     const int C = p2n * WIDTH + (p2n - 1) * SPACE;  // Cols for print string
 
     // Allocation
+    const char BLANK = ' ';
     char** arr = new char*[R];
     for(int i = 0; i < R; ++i) {
         arr[i] = new char[C+1];
-        memset(arr[i], '-', C * sizeof(char));
+        memset(arr[i], BLANK, C * sizeof(char));
         arr[i][C] = '\0';
     }
 
@@ -209,7 +214,7 @@ void AVLTree::levelOrder(std::ostream& out) {
 
 
     for(int r = R-1; r >= 0; --r) {
-        std::cout << std::endl;
+
         int start = [&](){
             if(maxDepth - r == 0) {
                 return 0;
@@ -218,14 +223,12 @@ void AVLTree::levelOrder(std::ostream& out) {
             int underNodes = 1 << (maxDepth - r - 1); 
             // Nodes under this node, but only left half
 
-            watch(underNodes);
             int space = underNodes * WIDTH + (underNodes-1) * SPACE - WIDTH/2 ;
-            watch(space);
             return space;
         }();
 
-        watch(r);
-        watch(maxDepth - r);
+        // watch(r);
+        // watch(maxDepth - r);
         // watch(start);
 
         auto gap = [&](){ // between each node
@@ -236,10 +239,8 @@ void AVLTree::levelOrder(std::ostream& out) {
             // return 2 * start + SPACE;
         };
 
-        // memset(arr[r] + start, 'd', WIDTH);
 
         int u = gap();
-        watch(u);
 
         // Index of node in a complete binary tree as array
         int ai = (1 << r) - 1;
@@ -247,7 +248,9 @@ void AVLTree::levelOrder(std::ostream& out) {
             locations[ai] = i;
             ai++;
 
-            memset(arr[r] + i, 'd', WIDTH);
+            // Uncomment to show where nodes will be placed
+            // if all nodes in complete binary tree existed.
+            // memset(arr[r] + i, 'd', WIDTH);
             
             i = i + WIDTH + u;
         }
@@ -256,20 +259,26 @@ void AVLTree::levelOrder(std::ostream& out) {
     } // row loop in reverse
 
 
-    std::cout << "locations\n";
-    for(auto& a: locations) {
-        std::cout << a << std::endl;
-    }
+    // std::cout << "locations\n";
+    // for(auto& a: locations) {
+    //     std::cout << a << std::endl;
+    // }
 
     for(int i = 0; i < levels.size(); ++i) {
         int depth, ai, val;
         std::tie(depth, ai, val) = levels[i];
 
         int xval = locations[ai];
-        arr[depth][xval] = 'X';
-        char c = val;
-        arr[depth][xval+1] = val + '0';
-        arr[depth][xval+2] = 'X';
+
+        // TODO: increase buffer width/handle 
+        char buf[100] = {'\0'};
+
+        // TODO: print Balance val as well, maybe overload << to get repr of node
+        int nc = snprintf(buf, WIDTH + 1, "<%d>", val);
+        // Makes sure a large number doesn't offset the other nodes
+        
+        std::strncpy(arr[depth] + xval, buf, WIDTH);
+
     }
 
 
@@ -304,6 +313,7 @@ int main() {
 
     // DONT INSERT 0
     
+    // More or less balanced
     tree.insert(5);
     tree.insert(2);
     tree.insert(3);
@@ -311,6 +321,25 @@ int main() {
     tree.insert(6);
     tree.insert(7);
     tree.insert(1);
+
+    // Right ladder
+    // tree.insert(1);
+    // tree.insert(2);
+    // tree.insert(3);
+    // tree.insert(4);
+    // tree.insert(5);
+    // tree.insert(6);
+
+    // Left ladder
+    // tree.insert(6);
+    // tree.insert(5);
+    // tree.insert(4);
+    // tree.insert(3);
+    // tree.insert(2);
+    // tree.insert(1);
+    
+    
+
 
     std::cout << "preorderFunction\n";
     preorderFunction(tree.root, 
@@ -322,6 +351,8 @@ int main() {
 
 
     // inorder(tree.root);
+
+    // If tree gets too deep, the pretty print will go out of your screen
     tree.levelOrder();
 
     return 0;
