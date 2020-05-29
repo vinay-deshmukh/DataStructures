@@ -6,6 +6,7 @@
 #include <iostream>
 #include <vector>
 #include <queue>
+#include <sstream>
 #include <tuple>
 
 #define watch(x) std::cout << (#x) << "=" << x << std::endl;
@@ -22,10 +23,30 @@ public:
     */
     AVLNode(int v, AVLNode* l = nullptr, AVLNode* r = nullptr);
 
+    /**
+    * Operator<< Overload to print repr(node)
+    */
+    friend std::ostream& operator<<(std::ostream& out, const AVLNode* node);
+
 };
 
 AVLNode::AVLNode(int v, AVLNode* l, AVLNode* r)
     : val(v), balance(0), left(l), right(r) {
+}
+
+std::ostream& operator<<(std::ostream& out, const AVLNode* node) {
+    if(node == nullptr) {
+        out << "null";
+    } else {
+        std::string s = //"<" + 
+            std::to_string(node->val) 
+            + "," 
+            + std::to_string(node->balance)
+            // + ">"
+            ;
+        out << s;
+    }
+    return out;
 }
 
 class AVLTree {
@@ -56,22 +77,12 @@ private:
     */
     AVLNode* insertNode(AVLNode* node, int val);
 
-    /**
-    * TODO:
-    */
-    // void explore(AVLNode* node, std::queue<AVLNode*>& bfs);
 
 };
 
 AVLTree::AVLTree() : root(nullptr) {
 }
 
-// void AVLTree::explore(AVLNode* node, std::queue<AVLNode*>& bfs) {
-//     if(node != nullptr) {
-//         bfs.push(node->left);
-//         bfs.push(node->right);
-//     }
-// }
 
 AVLNode* AVLTree::insert(int val) {
     if(root == nullptr) {
@@ -105,7 +116,7 @@ AVLNode* AVLTree::insertNode(AVLNode* node, int val) {
     return res;
 }
 
-void preorderLevels(AVLNode* t, int depth, int ai, std::vector<std::tuple<int, int, int>>& levels) {
+void preorderLevels(AVLNode* t, int depth, int ai, std::vector<std::tuple<int, int, AVLNode*>>& levels) {
     // depth is from root to current node, where depth(root) = 0
     // ai is index of node in an array which holds a complete binary tree
     // if ai is index of current node, then
@@ -115,7 +126,7 @@ void preorderLevels(AVLNode* t, int depth, int ai, std::vector<std::tuple<int, i
     if(t != nullptr) {
         
         // std::cout << n->val << " ";
-        levels.push_back(std::tuple<int,int, int>(depth, ai, t->val));
+        levels.push_back(std::tuple<int,int, AVLNode*>(depth, ai, t));
         preorderLevels(t->left , depth + 1, 2 * ai + 1, levels);
         preorderLevels(t->right, depth + 1, 2 * ai + 2, levels);
     }
@@ -138,20 +149,20 @@ void AVLTree::levelOrder(std::ostream& out) {
     out << "yes" << std::endl;
     
     
-    std::vector<std::tuple<int, int, int>> levels;
-    // Stores pairs of (depth, xval, value)
+    std::vector<std::tuple<int, int, AVLNode*>> levels;
+    // Stores pairs of (depth, xval, node)
     /* where depth is y-coordinate
-             xval is x-coordinate,
-                root is 0, nodes ot lef
+             xval is index of node if this was a complete binary tree
+             node is a pointer to the node
     */
 
     preorderLevels(root, 0, 0,levels);
 
 
     std::sort(levels.begin(), levels.end(), 
-        [](std::tuple<int, int, int>& p1, std::tuple<int, int, int>& p2) {
+        [](std::tuple<int, int, AVLNode*>& p1, std::tuple<int, int, AVLNode*>& p2) {
             if(std::get<0>(p1) == std::get<0>(p2))
-                return std::get<2>(p1) < std::get<2>(p2);
+                return std::get<2>(p1)->val < std::get<2>(p2)->val;
             return std::get<0>(p1) < std::get<0>(p2);
         }
     );
@@ -166,7 +177,7 @@ void AVLTree::levelOrder(std::ostream& out) {
 
     // std::tuple<int,int,int>*
     auto x = std::max_element(levels.begin(), levels.end(), 
-        [](std::tuple<int, int, int>& p1, std::tuple<int, int, int>& p2) {
+        [](std::tuple<int, int, AVLNode*>& p1, std::tuple<int, int, AVLNode*>& p2) {
             return std::get<0>(p1) < std::get<0>(p2);
         }
     );
@@ -176,11 +187,17 @@ void AVLTree::levelOrder(std::ostream& out) {
     std::cout << "where depth of root is 0\n";
 
     // NOTE: Both have to be odd, to center properly
-    const int WIDTH = 3; // Width of each node
+    // TODO: Calculate width, based on max size of string of node or some heuristic
+    const int WIDTH = 5; // Width of each node
     const int SPACE = 1; // Space between node at deepest level
-
-    // Can seem to change width and it works
-    // But only works with SPACE = 1
+    // Works with SPACE = 1
+    /*
+        Seems to work properly with
+        width space
+        3     1
+        5     1
+        7     1
+    */
 
     const int p2n = 1 << maxDepth; // No of nodes at maxDepth ie 2^maxDepth
 
@@ -188,9 +205,11 @@ void AVLTree::levelOrder(std::ostream& out) {
 
     const int R = maxDepth + 1;                     // Rows for print string
     const int C = p2n * WIDTH + (p2n - 1) * SPACE;  // Cols for print string
+    watch(R);
+    watch(C);
 
     // Allocation
-    const char BLANK = ' ';
+    const char BLANK = '-';
     char** arr = new char*[R];
     for(int i = 0; i < R; ++i) {
         arr[i] = new char[C+1];
@@ -228,8 +247,8 @@ void AVLTree::levelOrder(std::ostream& out) {
         }();
 
         // watch(r);
-        // watch(maxDepth - r);
-        // watch(start);
+        watch(maxDepth - r);
+        watch(start);
 
         auto gap = [&](){ // between each node
             if(maxDepth - r == 0) {
@@ -250,7 +269,7 @@ void AVLTree::levelOrder(std::ostream& out) {
 
             // Uncomment to show where nodes will be placed
             // if all nodes in complete binary tree existed.
-            // memset(arr[r] + i, 'd', WIDTH);
+            memset(arr[r] + i, 'd', WIDTH);
             
             i = i + WIDTH + u;
         }
@@ -265,19 +284,53 @@ void AVLTree::levelOrder(std::ostream& out) {
     // }
 
     for(int i = 0; i < levels.size(); ++i) {
-        int depth, ai, val;
-        std::tie(depth, ai, val) = levels[i];
+        int depth, ai;
+        AVLNode* node;
+        std::tie(depth, ai, node) = levels[i];
 
         int xval = locations[ai];
 
         // TODO: increase buffer width/handle 
         char buf[100] = {'\0'};
 
+        // int val = node->val;
         // TODO: print Balance val as well, maybe overload << to get repr of node
-        int nc = snprintf(buf, WIDTH + 1, "<%d>", val);
-        // Makes sure a large number doesn't offset the other nodes
+        // int nc = snprintf(buf, WIDTH + 1, "<%d>", val);
+
+        std::stringstream sv;
+        sv << node;
+        char temp[100];
+        sv >> temp;
+
+        int inputLength = std::strlen(temp);
+        // https://stackoverflow.com/questions/17512825/align-text-to-center-in-string-c
+        int extra = (WIDTH - inputLength)/2;
+        const char PAD = 'P';
         
-        std::strncpy(arr[depth] + xval, buf, WIDTH);
+        std::string res;
+        if(extra > 0) {
+            std::string pad = std::string(extra, PAD);
+            res = pad + std::string(temp) + pad;
+        }
+        else {
+            res = std::string(temp);
+        }
+        
+
+        watch(node);
+        // + 1 to account for \0 being appended automatically
+        // int nc = snprintf(buf, WIDTH+1, "%s", temp);
+        // watch(nc);
+        watch(buf);
+        // if(nc > WIDTH) {
+            // Remove null character
+            // buf[WIDTH] = 'B';//BLANK;
+        // }
+
+
+        // Makes sure a large number doesn't offset the other nodes
+        // std::strncpy(arr[depth] + xval, buf, WIDTH);
+        std::strncpy(arr[depth] + xval, res.c_str(), WIDTH);
 
     }
 
@@ -285,7 +338,14 @@ void AVLTree::levelOrder(std::ostream& out) {
 
     // Print
     for(int i = 0; i < R; ++i) {
-        std::cout << arr[i] << std::endl;
+        // std::cout << arr[i] << std::endl;
+        for(int c = 0; c < C; ++c) {
+            if(arr[i][c] != '\0')
+                printf("%c", arr[i][c]);
+            else
+                printf("%c", 'X');
+        }
+        printf("\n");
     }
 
 
