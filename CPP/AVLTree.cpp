@@ -14,7 +14,7 @@
 class AVLNode {
 public:
     int val;
-    int balance;
+    int height;
     AVLNode* left;
     AVLNode* right;
 
@@ -31,18 +31,26 @@ public:
 };
 
 AVLNode::AVLNode(int v, AVLNode* l, AVLNode* r)
-    : val(v), balance(0), left(l), right(r) {
+    : val(v), height(0), left(l), right(r) {
+}
+
+int height(AVLNode* node) {
+    if(node) {
+        return node->height;
+    } else {
+        return -1;
+    }
 }
 
 std::ostream& operator<<(std::ostream& out, const AVLNode* node) {
     if(node == nullptr) {
         out << "null";
     } else {
-        std::string s = //"<" + 
+        std::string s = "<" + 
             std::to_string(node->val) 
             + "," 
-            + std::to_string(node->balance)
-            // + ">"
+            + std::to_string(node->height)
+            + ">"
             ;
         out << s;
     }
@@ -73,10 +81,18 @@ public:
 private:
     /**
     * Recursive insertion function called by `insert()`.
-    * Returns a pointer to the newly inserted node.
     */
-    AVLNode* insertNode(AVLNode* node, int val);
+    void insertNode(AVLNode* & node, int val);
 
+    /**
+    * Rotate LL on critical node
+    */
+    void rotateLL(AVLNode* & node);
+
+    /**
+    * Rotate RR on critical node
+    */
+    void rotateRR(AVLNode* & node);
 
 };
 
@@ -85,36 +101,102 @@ AVLTree::AVLTree() : root(nullptr) {
 
 
 AVLNode* AVLTree::insert(int val) {
-    if(root == nullptr) {
-        root = new AVLNode(val);
-        return root;
-    } else {
-        return insertNode(root, val);
-    }
-    return nullptr;
+    AVLNode* res = nullptr;
+    // if(root == nullptr) {
+    //     root = new AVLNode(val);
+    //     res = root;
+    // } else {
+    //     res = insertNode(root, val);
+    // }
+
+    insertNode(root, val);
+
+    std::cout << "inserted " << val << std::endl;
+    levelOrder();
+    std::cout << std::endl;
+
+    return res;
+    // return nullptr;
 }
 
-AVLNode* AVLTree::insertNode(AVLNode* node, int val) {
+void AVLTree::insertNode(AVLNode* & node, int val) {
     AVLNode* res;
-    if (val < node->val) {
-        if(node->left){
-            res = insertNode(node->left, val);
-        } else {
-            res = node->left = new AVLNode(val);
-        }
-    } else if (val >= node->val) {
-        if(node->right) {
-            res = insertNode(node->right, val);
-        } else {
-            res = node->right = new AVLNode(val);
-        }
-    } else {
-        // TODO: remove this block
-        res = node;
-        std::cout << "already in" << std::endl;
+    if(node == nullptr) {
+        node = new AVLNode(val);
+    } else if (val < node->val) {
+        insertNode(node->left, val);
+    } else { //if (val >= node->val) {
+        insertNode(node->right, val);
     }
-    return res;
+
+    int hdf = height(node->right) - height(node->left);
+    if (hdf == 2) {
+        // Rebalance right heavy
+        watch("right");
+
+        if(val >= node->right->val) {
+            // RR
+            rotateRR(node);
+        } else {
+            // RL
+            rotateLL(node->right);
+            rotateRR(node);
+        }
+
+        
+
+    } else if (hdf == -2) {
+        // Rebalance left heavy
+        watch("left");
+
+        if(val < node->left->val) {
+            // LL
+            watch("LL");
+            rotateLL(node);
+        } else {
+            // LR
+            rotateRR(node->left);
+            rotateLL(node);
+        }
+    }
+
+    node->height = std::max(height(node->left), height(node->right)) + 1;
+
 }
+
+void AVLTree::rotateLL(AVLNode* & node) {
+    AVLNode* t2 = node->left->right;
+    AVLNode* t3 = node->right;
+
+    AVLNode* temp = node->left;
+    temp->right = node;
+    node->left = t2;
+    node = temp;
+
+    node->height = 1 + std::max(height(node->left), height(node->right));
+    AVLNode* orig = node->right;
+    orig->height = 1 + std::max(height(orig->left), height(orig->right));
+
+}
+
+
+void AVLTree::rotateRR(AVLNode* & node) {
+    AVLNode* t1 = node->left;
+    AVLNode* t2 = node->right->left;
+    AVLNode* t3 = node->right->right;
+
+    AVLNode* temp = node->right;
+    temp->left = node;
+    node->right = t2;
+    node = temp;
+
+    node->height = 1 + std::max(height(node->left), height(node->right));
+    AVLNode* orig = node->left;
+    orig->height = 1 + std::max(height(orig->left), height(orig->right));
+
+
+}
+
 
 void preorderLevels(AVLNode* t, int depth, int ai, std::vector<std::tuple<int, int, AVLNode*>>& levels) {
     // depth is from root to current node, where depth(root) = 0
@@ -132,23 +214,12 @@ void preorderLevels(AVLNode* t, int depth, int ai, std::vector<std::tuple<int, i
     }
 }
 
-void preorderFunction(AVLNode* n, std::function<void(AVLNode*)> func) {
-    if(n != nullptr) {
-        func(n);
-        preorderFunction(n->left, func);
-        preorderFunction(n->right, func);
-    }
-}
-
 
 void AVLTree::levelOrder(std::ostream& out) {
     // TODO:
     // if tree is left ladder or right ladder,
     // then shave off all whitespace on one side of the root and return
 
-    out << "yes" << std::endl;
-    
-    
     std::vector<std::tuple<int, int, AVLNode*>> levels;
     // Stores pairs of (depth, xval, node)
     /* where depth is y-coordinate
@@ -156,7 +227,7 @@ void AVLTree::levelOrder(std::ostream& out) {
              node is a pointer to the node
     */
 
-    preorderLevels(root, 0, 0,levels);
+    preorderLevels(root, 0, 0, levels);
 
 
     std::sort(levels.begin(), levels.end(), 
@@ -167,13 +238,13 @@ void AVLTree::levelOrder(std::ostream& out) {
         }
     );
 
-    for(auto& a: levels) {
-        std::cout << std::get<0>(a) 
-        << "->" << std::get<1>(a)
-        << "->" << std::get<2>(a)
-        << "\n";
-    }
-    std::cout << std::endl;
+    // for(auto& a: levels) {
+    //     std::cout << std::get<0>(a) 
+    //     << "->" << std::get<1>(a)
+    //     << "->" << std::get<2>(a)
+    //     << "\n";
+    // }
+    // std::cout << std::endl;
 
     // std::tuple<int,int,int>*
     auto x = std::max_element(levels.begin(), levels.end(), 
@@ -183,8 +254,8 @@ void AVLTree::levelOrder(std::ostream& out) {
     );
     int maxDepth = std::get<0>(*x);
 
-    std::cout << "maxDepth" << maxDepth << '\n';
-    std::cout << "where depth of root is 0\n";
+    // std::cout << "maxDepth" << maxDepth << '\n';
+    // std::cout << "where depth of root is 0\n";
 
     // NOTE: Both have to be odd, to center properly
     // TODO: Calculate width, based on max size of string of node or some heuristic
@@ -205,11 +276,12 @@ void AVLTree::levelOrder(std::ostream& out) {
 
     const int R = maxDepth + 1;                     // Rows for print string
     const int C = p2n * WIDTH + (p2n - 1) * SPACE;  // Cols for print string
-    watch(R);
-    watch(C);
+    const char PLACEHOLDER = ' ';
+    // watch(R);
+    // watch(C);
 
     // Allocation
-    const char BLANK = '-';
+    const char BLANK = ' ';
     char** arr = new char*[R];
     for(int i = 0; i < R; ++i) {
         arr[i] = new char[C+1];
@@ -247,8 +319,8 @@ void AVLTree::levelOrder(std::ostream& out) {
         }();
 
         // watch(r);
-        watch(maxDepth - r);
-        watch(start);
+        // watch(maxDepth - r);
+        // watch(start);
 
         auto gap = [&](){ // between each node
             if(maxDepth - r == 0) {
@@ -269,7 +341,7 @@ void AVLTree::levelOrder(std::ostream& out) {
 
             // Uncomment to show where nodes will be placed
             // if all nodes in complete binary tree existed.
-            memset(arr[r] + i, 'd', WIDTH);
+            memset(arr[r] + i, PLACEHOLDER, WIDTH);
             
             i = i + WIDTH + u;
         }
@@ -317,16 +389,7 @@ void AVLTree::levelOrder(std::ostream& out) {
         }
         
 
-        watch(node);
-        // + 1 to account for \0 being appended automatically
-        // int nc = snprintf(buf, WIDTH+1, "%s", temp);
-        // watch(nc);
-        watch(buf);
-        // if(nc > WIDTH) {
-            // Remove null character
-            // buf[WIDTH] = 'B';//BLANK;
-        // }
-
+        // watch(node);
 
         // Makes sure a large number doesn't offset the other nodes
         // std::strncpy(arr[depth] + xval, buf, WIDTH);
@@ -354,9 +417,6 @@ void AVLTree::levelOrder(std::ostream& out) {
         delete[] arr[i];
     }
     delete[] arr;
-
-
-
 }
 
 void inorder(AVLNode* n) {
@@ -400,20 +460,10 @@ int main() {
     
     
 
-
-    std::cout << "preorderFunction\n";
-    preorderFunction(tree.root, 
-        [](AVLNode* n) {
-            std::cout << "preorderFunction:";
-            std:: cout << n->val << std::endl;
-        }
-    );
-
-
     // inorder(tree.root);
 
     // If tree gets too deep, the pretty print will go out of your screen
-    tree.levelOrder();
+    // tree.levelOrder();
 
     return 0;
 }
