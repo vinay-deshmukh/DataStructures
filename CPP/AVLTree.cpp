@@ -68,10 +68,16 @@ public:
 
     /**
     * Insert the given value into the tree, 
-    * and return a pointer to newly inserted node.
     */
-    AVLNode* insert(int val);
+    void insert(int val);
     //TODO: functions
+
+    /**
+    * Return a pointer to the first node with value == `val`
+    * If such node doesn't exist, return `nullptr`
+    */
+    AVLNode* search(int val);
+
 
     /**
     * Print the level order traversal to the ostream parameter.
@@ -99,24 +105,13 @@ private:
 AVLTree::AVLTree() : root(nullptr) {
 }
 
-
-AVLNode* AVLTree::insert(int val) {
-    AVLNode* res = nullptr;
-    // if(root == nullptr) {
-    //     root = new AVLNode(val);
-    //     res = root;
-    // } else {
-    //     res = insertNode(root, val);
-    // }
+void AVLTree::insert(int val) {
 
     insertNode(root, val);
 
     std::cout << "inserted " << val << std::endl;
     levelOrder();
     std::cout << std::endl;
-
-    return res;
-    // return nullptr;
 }
 
 void AVLTree::insertNode(AVLNode* & node, int val) {
@@ -143,8 +138,6 @@ void AVLTree::insertNode(AVLNode* & node, int val) {
             rotateRR(node);
         }
 
-        
-
     } else if (hdf == -2) {
         // Rebalance left heavy
         watch("left");
@@ -161,7 +154,6 @@ void AVLTree::insertNode(AVLNode* & node, int val) {
     }
 
     node->height = std::max(height(node->left), height(node->right)) + 1;
-
 }
 
 void AVLTree::rotateLL(AVLNode* & node) {
@@ -176,7 +168,6 @@ void AVLTree::rotateLL(AVLNode* & node) {
     node->height = 1 + std::max(height(node->left), height(node->right));
     AVLNode* orig = node->right;
     orig->height = 1 + std::max(height(orig->left), height(orig->right));
-
 }
 
 
@@ -193,10 +184,7 @@ void AVLTree::rotateRR(AVLNode* & node) {
     node->height = 1 + std::max(height(node->left), height(node->right));
     AVLNode* orig = node->left;
     orig->height = 1 + std::max(height(orig->left), height(orig->right));
-
-
 }
-
 
 void preorderLevels(AVLNode* t, int depth, int ai, std::vector<std::tuple<int, int, AVLNode*>>& levels) {
     // depth is from root to current node, where depth(root) = 0
@@ -214,11 +202,7 @@ void preorderLevels(AVLNode* t, int depth, int ai, std::vector<std::tuple<int, i
     }
 }
 
-
 void AVLTree::levelOrder(std::ostream& out) {
-    // TODO:
-    // if tree is left ladder or right ladder,
-    // then shave off all whitespace on one side of the root and return
 
     std::vector<std::tuple<int, int, AVLNode*>> levels;
     // Stores pairs of (depth, xval, node)
