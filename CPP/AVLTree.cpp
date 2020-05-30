@@ -100,6 +100,11 @@ private:
     */
     void rotateRR(AVLNode* & node);
 
+    /**
+    * Recursive search function called by `search()`.
+    */
+    AVLNode* searchNode(AVLNode* node, int val);
+
 };
 
 AVLTree::AVLTree() : root(nullptr) {
@@ -170,7 +175,6 @@ void AVLTree::rotateLL(AVLNode* & node) {
     orig->height = 1 + std::max(height(orig->left), height(orig->right));
 }
 
-
 void AVLTree::rotateRR(AVLNode* & node) {
     AVLNode* t1 = node->left;
     AVLNode* t2 = node->right->left;
@@ -184,6 +188,22 @@ void AVLTree::rotateRR(AVLNode* & node) {
     node->height = 1 + std::max(height(node->left), height(node->right));
     AVLNode* orig = node->left;
     orig->height = 1 + std::max(height(orig->left), height(orig->right));
+}
+
+AVLNode* AVLTree::search(int val) {
+    return searchNode(root, val);
+}
+
+AVLNode* AVLTree::searchNode(AVLNode* node, int val) {
+    if(node == nullptr)
+        return nullptr;
+    if(val < node->val) {
+        return searchNode(node->left, val);
+    } else if (val > node->val) {
+        return searchNode(node->right, val);
+    } else {
+        return node;
+    }
 }
 
 void preorderLevels(AVLNode* t, int depth, int ai, std::vector<std::tuple<int, int, AVLNode*>>& levels) {
@@ -417,6 +437,11 @@ int main() {
 
     // DONT INSERT 0
     
+    // When tree empty
+    auto f = tree.search(5);
+    watch("search when empty");
+    watch(f);
+
     // More or less balanced
     tree.insert(5);
     tree.insert(2);
@@ -425,6 +450,14 @@ int main() {
     tree.insert(6);
     tree.insert(7);
     tree.insert(1);
+
+    auto g = tree.search(1);
+    watch("search when present");
+    watch(g);
+
+    auto h = tree.search(99);
+    watch("search when absent")
+    watch(h);
 
     // Right ladder
     // tree.insert(1);
