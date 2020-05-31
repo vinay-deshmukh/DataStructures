@@ -1,29 +1,21 @@
-/**
- * The AVL Tree implementation in Java.
- *
- * @author  Bhushan Borole
- */
-
-
 import java.util.ArrayList;
-import java.util.Arrays;
 import java.util.Collections;
 import java.util.List;
 
 /** A class to denote a node of the AVL Tree.
  */
-class AVLNode<T extends Comparable<?>> {
+class AVLNode {
     /** AVL Node hold's this value.
      */
     public int value;
 
     /** Pointer to left child of the AVL Node.
      */
-    public AVLNode<T> left;
+    public AVLNode left;
 
     /** Pointer to right child of the AVL Node.
      */
-    public AVLNode<T> right;
+    public AVLNode right;
 
     /** Height of the AVL Node.
      */
@@ -79,10 +71,10 @@ public class AVL {
      * Left Rotate Utility function
      *
      * node                                       rchild
-     *   \             After left rotate          /
-     *   rchild      ====================>       node
-     *   /                                        \
-     * temp                                       temp
+     *   \             After left rotate          /    \
+     *   rchild      ====================>       node   X
+     *   /   \                                    \
+     * temp   X                                    temp
      *
      * @param node
      * @return node that comes on the top after left rotation.
@@ -104,11 +96,11 @@ public class AVL {
     /**
      * Right Rotate Utility Function
      *
-     *      node                                   lchild
-     *       /           After right rotate           \
-     *    lchild       ====================>          node
-     *      \                                         /
-     *      temp                                    temp
+     *      node                                lchild
+     *       /          After right rotate        /   \
+     *    lchild      ====================>      X   node
+     *      /  \                                       /
+     *     X    temp                                  temp
      *
      * @param node
      * @return node that comes on the top after right rotation.
@@ -191,16 +183,7 @@ public class AVL {
     public AVLNode search(int value) {
         if(this.root == null)
             return null;
-        AVLNode node = search(this.root, value);
-
-        if(node != null) {
-            System.out.println("Node found");
-            return node;
-        }
-        else {
-            System.out.println("Node not found");
-            return null;
-        }
+        return search(this.root, value);
     }
 
     private AVLNode search(AVLNode node, int value) {
@@ -293,7 +276,6 @@ public class AVL {
     public void inOrder(AVLNode node, List<Integer> inOrderList) {
         if(node != null){
             inOrder(node.left, inOrderList);
-//            System.out.print(" " + node.value);
             inOrderList.add(node.value);
             inOrder(node.right, inOrderList);
         }
@@ -342,16 +324,17 @@ public class AVL {
  * https://stackoverflow.com/questions/4965335/how-to-print-binary-tree-diagram/29704252
  *
  */
-class BTreePrinter {
+class TreePrinter {
 
-    public static <T extends Comparable<?>> void printNode(AVLNode<T> root) {
-        int maxLevel = BTreePrinter.maxLevel(root);
+//    public static <T extends Comparable<?>> void printNode(AVLNode<T> root) {
+    public static void printNode(AVLNode root) {
+        int maxLevel = TreePrinter.maxLevel(root);
 
         printNodeInternal(Collections.singletonList(root), 1, maxLevel);
     }
 
-    private static <T extends Comparable<?>> void printNodeInternal(List<AVLNode<T>> nodes, int level, int maxLevel) {
-        if (nodes.isEmpty() || BTreePrinter.isAllElementsNull(nodes))
+    private static void printNodeInternal(List<AVLNode> nodes, int level, int maxLevel) {
+        if (nodes.isEmpty() || TreePrinter.isAllElementsNull(nodes))
             return;
 
         int floor = maxLevel - level;
@@ -359,10 +342,10 @@ class BTreePrinter {
         int firstSpaces = (int) Math.pow(2, (floor)) - 1;
         int betweenSpaces = (int) Math.pow(2, (floor + 1)) - 1;
 
-        BTreePrinter.printWhitespaces(firstSpaces);
+        TreePrinter.printWhitespaces(firstSpaces);
 
-        List<AVLNode<T>> newNodes = new ArrayList<AVLNode<T>>();
-        for (AVLNode<T> node : nodes) {
+        List<AVLNode> newNodes = new ArrayList<AVLNode>();
+        for (AVLNode node : nodes) {
             if (node != null) {
                 System.out.print(node.value);
                 newNodes.add(node.left);
@@ -373,31 +356,31 @@ class BTreePrinter {
                 System.out.print(" ");
             }
 
-            BTreePrinter.printWhitespaces(betweenSpaces);
+            TreePrinter.printWhitespaces(betweenSpaces);
         }
         System.out.println("");
 
         for (int i = 1; i <= edgeLines; i++) {
-            for (AVLNode<T> node : nodes) {
-                BTreePrinter.printWhitespaces(firstSpaces - i);
+            for (AVLNode node : nodes) {
+                TreePrinter.printWhitespaces(firstSpaces - i);
                 if (node == null) {
-                    BTreePrinter.printWhitespaces(edgeLines + edgeLines + i + 1);
+                    TreePrinter.printWhitespaces(edgeLines + edgeLines + i + 1);
                     continue;
                 }
 
                 if (node.left != null)
                     System.out.print("/");
                 else
-                    BTreePrinter.printWhitespaces(1);
+                    TreePrinter.printWhitespaces(1);
 
-                BTreePrinter.printWhitespaces(i + i - 1);
+                TreePrinter.printWhitespaces(i + i - 1);
 
                 if (node.right != null)
                     System.out.print("\\");
                 else
-                    BTreePrinter.printWhitespaces(1);
+                    TreePrinter.printWhitespaces(1);
 
-                BTreePrinter.printWhitespaces(edgeLines + edgeLines - i);
+                TreePrinter.printWhitespaces(edgeLines + edgeLines - i);
             }
 
             System.out.println("");
@@ -411,14 +394,14 @@ class BTreePrinter {
             System.out.print(" ");
     }
 
-    private static <T extends Comparable<?>> int maxLevel(AVLNode<T> node) {
+    private static int maxLevel(AVLNode node) {
         if (node == null)
             return 0;
 
-        return Math.max(BTreePrinter.maxLevel(node.left), BTreePrinter.maxLevel(node.right)) + 1;
+        return Math.max(TreePrinter.maxLevel(node.left), TreePrinter.maxLevel(node.right)) + 1;
     }
 
-    private static <T> boolean isAllElementsNull(List<T> list) {
+    private static boolean isAllElementsNull(List list) {
         for (Object object : list) {
             if (object != null)
                 return false;
@@ -439,12 +422,21 @@ class App {
 
         System.out.println(avlTree.inOrder());
 
-        avlTree.search(0);  // True
-        avlTree.search(10); // False
+        AVLNode node1 = avlTree.search(0);  // True
+        if(node1 != null)
+            System.out.println("Node found");
+        else
+            System.out.println("Node not found");
+
+        AVLNode node2 = avlTree.search(10); // False
+        if(node2 != null)
+            System.out.println("Node found");
+        else
+            System.out.println("Node not found");
 
         avlTree.delete(3);
 
-        BTreePrinter.printNode(avlTree.root);
+        TreePrinter.printNode(avlTree.root);
     }
 
 }
