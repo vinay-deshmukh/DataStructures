@@ -21,7 +21,7 @@ public:
     /**
     * Constructor
     */
-    AVLNode(int v, AVLNode* l = nullptr, AVLNode* r = nullptr);
+    explicit AVLNode(int v, AVLNode* l = nullptr, AVLNode* r = nullptr);
 
     /**
     * Destructor
@@ -142,7 +142,7 @@ void AVLTree::insert(int val) {
 }
 
 void AVLTree::insertNode(AVLNode* & node, int val) {
-    AVLNode* res;
+
     if(node == nullptr) {
         node = new AVLNode(val);
     } else if (val < node->val) {
@@ -212,13 +212,13 @@ bool AVLTree::removeNode(AVLNode* & node, int val) {
             AVLNode* temp = node;
             delete temp;
             node = (node->left != nullptr) ? node->left : node->right;
-        } else if(node->left != nullptr && node->right != nullptr) {
+        } else { //if(node->left != nullptr && node->right != nullptr) {
             // Two children
             watch("two child")
             watch(node)
 
             // Preserve the child pointers
-            AVLNode* noderight = node->right;
+            // AVLNode* noderight = node->right;
             AVLNode* nodeleft = node->left;
 
             // Find inorder predecessor
@@ -228,10 +228,10 @@ bool AVLTree::removeNode(AVLNode* & node, int val) {
             watch(find)
             watch(find->right)
 
-            AVLNode* prev = nullptr;
+            // AVLNode* prev = nullptr;
             watch("begin loop")
             while(find->right != nullptr) {
-                prev = find;
+                // prev = find;
                 find = find->right;
             }
 
@@ -241,8 +241,6 @@ bool AVLTree::removeNode(AVLNode* & node, int val) {
 
             watch("Start deletion of inorder child now")
             res = removeNode(node->left, find->val);
-        } else {
-            std::cout << "You should never have reached here.." << std::endl;
         }
     }
 
@@ -302,11 +300,11 @@ bool AVLTree::removeNode(AVLNode* & node, int val) {
 
 void AVLTree::rotateLL(AVLNode* & node) {
 
-    AVLNode* t2 = nullptr; //node->left->right;
-    if(node->left != nullptr) {
-        t2 = node->left->right;
-    }
-    // AVLNode* t3 = node->right;
+    // AVLNode* t2 = nullptr; //node->left->right;
+    // if(node->left != nullptr) {
+    AVLNode* t2 = node->left->right;
+    // }
+
 
     watch("LL start");
     watch(node)
@@ -327,16 +325,13 @@ void AVLTree::rotateLL(AVLNode* & node) {
 }
 
 void AVLTree::rotateRR(AVLNode* & node) {
-    AVLNode* t1 = node->left;
+
     watch("tt")
-    AVLNode* t2 = nullptr;//node->right->left;
-    AVLNode* t3 = nullptr;//node->right->right;
+    // AVLNode* t2 = nullptr;//node->right->left;
     watch("defined")
-    if(node->right != nullptr) {
+
         watch("node right not null")
-        t2 = node->right->left;
-        t3 = node->right->right;
-    }
+    AVLNode* t2 = node->right->left;
 
     AVLNode* temp = node->right;
     temp->left = node;
@@ -528,10 +523,6 @@ void AVLTree::levelOrder(std::ostream& out) {
         // TODO: increase buffer width/handle 
         char buf[100] = {'\0'};
 
-        // int val = node->val;
-        // TODO: print Balance val as well, maybe overload << to get repr of node
-        // int nc = snprintf(buf, WIDTH + 1, "<%d>", val);
-
         std::stringstream sv;
         sv << node;
         char temp[100];
@@ -550,12 +541,8 @@ void AVLTree::levelOrder(std::ostream& out) {
         else {
             res = std::string(temp);
         }
-        
 
-        // watch(node);
-
-        // Makes sure a large number doesn't offset the other nodes
-        // std::strncpy(arr[depth] + xval, buf, WIDTH);
+        // Makes sure a large repr() of a node doesn't exceed the allotted width
         std::strncpy(arr[depth] + xval, res.c_str(), WIDTH);
 
     }
@@ -592,7 +579,6 @@ void inorder(AVLNode* n) {
 
 int main() {
     AVLTree tree;
-    std::tuple<int, int, int, int> t;
 
     // DONT INSERT 0
     
@@ -610,6 +596,7 @@ int main() {
     tree.insert(7);
     tree.insert(1);
     tree.insert(8);
+    tree.insert(9);
 
     // auto g = tree.search(1);
     // watch("search when present");
@@ -630,7 +617,7 @@ int main() {
     5 two child root
     */
 
-    int del = 3;
+    int del = 5;
     bool y = tree.remove(del);
     std::cout << "delete " << del << std::endl;
     watch(y)
