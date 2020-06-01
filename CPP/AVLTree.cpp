@@ -27,7 +27,7 @@ public:
     * Destructor
     * (to make sure deallocation is happeing)
     */
-    ~AVLNode();
+    // ~AVLNode();
 
     /**
     * Operator<< Overload to print repr(node)
@@ -40,11 +40,11 @@ AVLNode::AVLNode(int v, AVLNode* l, AVLNode* r)
     : val(v), height(0), left(l), right(r) {
 }
 
-AVLNode::~AVLNode() {
-    std::cout << std::string(10, '*') << std::endl;
-    std::cout << val  << " was destroyed!"<< std::endl;
-    std::cout << std::string(10, '*') << std::endl;
-}
+// AVLNode::~AVLNode() {
+//     std::cout << std::string(10, '*') << std::endl;
+//     std::cout << val  << " was destroyed!"<< std::endl;
+//     std::cout << std::string(10, '*') << std::endl;
+// }
 
 int height(AVLNode* node) {
     if(node) {
@@ -78,14 +78,10 @@ public:
     */
     AVLTree();
 
-
-
-
     /**
     * Insert the given value into the tree, 
     */
     void insert(int val);
-    //TODO: functions
 
     /**
     * Deletes the given value from the tree
@@ -156,7 +152,7 @@ void AVLTree::insertNode(AVLNode* & node, int val) {
     }
 
     int hdf = height(node->right) - height(node->left);
-    if (hdf == 2) {
+    if (hdf > 1) {
         // Rebalance right heavy
         watch("right");
 
@@ -168,7 +164,7 @@ void AVLTree::insertNode(AVLNode* & node, int val) {
             rotateLL(node->right);
             rotateRR(node);
         }
-    } else if (hdf == -2) {
+    } else if (hdf < -1) {
         // Rebalance left heavy
         watch("left");
 
@@ -195,6 +191,7 @@ bool AVLTree::removeNode(AVLNode* & node, int val) {
         return false;
     watch(node->val);
     bool res = false;
+
     if(val < node->val) {
         res = removeNode(node->left, val);
     } else if (val > node->val) {
@@ -224,10 +221,6 @@ bool AVLTree::removeNode(AVLNode* & node, int val) {
             AVLNode* noderight = node->right;
             AVLNode* nodeleft = node->left;
 
-            // Delete node
-            delete node;
-
-
             // Find inorder predecessor
             // `find` will contain inorder predecessor
             AVLNode* find = nodeleft; 
@@ -244,38 +237,16 @@ bool AVLTree::removeNode(AVLNode* & node, int val) {
 
 
             // Assign inorder predecessor here
-            node = find;
+            node->val = find->val;
 
-            // Make parent of inorder predecessor point to nullptr
-            if(prev != nullptr) {
-                // Only do the above, if the while loop executed and 
-                // moved prev ahead
-                prev->right = nullptr;
-            }
-            
-
-            watch(find)
-            watch(find->left)
-            watch(find->right)
-            watch(node)
-            watch(nodeleft)
-            watch(noderight)
-
-            // Inorder predecessor is now at node
-            // It's child pointers should point at node's children
-            find->right = noderight;
-
-            // Avoid a cycle
-            if(find != nodeleft) {
-                find->left = nodeleft;
-            }
+            watch("Start deletion of inorder child now")
+            res = removeNode(node->left, find->val);
         } else {
             std::cout << "You should never have reached here.." << std::endl;
         }
     }
 
 
-    // TODO: rebalancing here
     if(node != nullptr) {
         // Make sure that node isn't a nullptr
         // Node will become a nullptr, only when node was a leaf
@@ -285,13 +256,18 @@ bool AVLTree::removeNode(AVLNode* & node, int val) {
 
         watch("balancing")
         watch(node)
-
+        
         int hdf = height(node->right) - height(node->left);
-        if (false or hdf > 1) {
+        watch(node)
+        watch(height(node->right));
+        watch(height(node->left));
+        watch(hdf)
+        if (hdf > 1) {
             // Rebalance right heavy
             watch("right");
 
-            if(height(node->right) >= 0) {//val >= node->right->val) {
+            int c = height(node->right) - height(node->left);
+            if(c >= 0) {//val >= node->right->val) {
                 // RR
                 rotateRR(node);
             } else {
@@ -299,13 +275,12 @@ bool AVLTree::removeNode(AVLNode* & node, int val) {
                 rotateLL(node->right);
                 rotateRR(node);
             }
-        } else if (false or hdf < -1) {
+        } else if (hdf < -1) {
             // Rebalance left heavy
             watch("left");
 
-            levelOrder();
-
-            if(height(node->left) >= 0) {//val < node->left->val) {
+            int c = height(node->right) - height(node->left);
+            if(c < 0) {
                 // LL
                 watch("LL");
                 rotateLL(node);
@@ -317,13 +292,13 @@ bool AVLTree::removeNode(AVLNode* & node, int val) {
                 rotateLL(node);
             }
         }
-
         node->height = std::max(height(node->left), height(node->right)) + 1;
+
     }
-
-
     return res;
 }
+
+
 
 void AVLTree::rotateLL(AVLNode* & node) {
 
@@ -331,16 +306,24 @@ void AVLTree::rotateLL(AVLNode* & node) {
     if(node->left != nullptr) {
         t2 = node->left->right;
     }
-    AVLNode* t3 = node->right;
+    // AVLNode* t3 = node->right;
+
+    watch("LL start");
+    watch(node)
+    watch(node->left)
+    watch(node->right)
 
     AVLNode* temp = node->left;
     temp->right = node;
     node->left = t2;
     node = temp;
+    watch("after swap")
+    watch(node)
 
     node->height = 1 + std::max(height(node->left), height(node->right));
     AVLNode* orig = node->right;
     orig->height = 1 + std::max(height(orig->left), height(orig->right));
+    watch("LL end")
 }
 
 void AVLTree::rotateRR(AVLNode* & node) {
@@ -647,7 +630,7 @@ int main() {
     5 two child root
     */
 
-    int del = 7;
+    int del = 3;
     bool y = tree.remove(del);
     std::cout << "delete " << del << std::endl;
     watch(y)
