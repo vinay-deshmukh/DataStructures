@@ -1,8 +1,3 @@
-import logging
-
-logging.basicConfig(level=logging.DEBUG)
-
-
 class AVLNode:
     '''
     A class used to describe a node in an AVL Tree.
@@ -42,11 +37,16 @@ class AVL:
             for i in args:
                 self.insert(i)
 
+    def height(self):
+        if self.root is not None:
+            return self._get_height(self.root)
+        return 0
+
     def is_leaf(self, node):
         '''Function to check whether the node is leaf node or not'''
         return node.left == None and node.right == None
 
-    def get_height(self, node):
+    def _get_height(self, node):
         '''Returns the height of the given node'''
         if node:
             return node.height
@@ -57,7 +57,7 @@ class AVL:
            balance factor = height of left subtree - height of right subtree
         '''
         if node:
-            return self.get_height(node.left) - self.get_height(node.right)
+            return self._get_height(node.left) - self._get_height(node.right)
         return 0
 
     def _lrotate(self, node):
@@ -75,8 +75,8 @@ class AVL:
         rchild.left = node
         node.right = temp
 
-        node.height = 1 + max(self.get_height(node.left), self.get_height(node.right))
-        rchild.height = 1 + max(self.get_height(rchild.left), self.get_height(rchild.right))
+        node.height = 1 + max(self._get_height(node.left), self._get_height(node.right))
+        rchild.height = 1 + max(self._get_height(rchild.left), self._get_height(rchild.right))
         
         return rchild
 
@@ -95,8 +95,8 @@ class AVL:
         lchild.right = node
         node.left = temp
 
-        node.height = 1 + max(self.get_height(node.left), self.get_height(node.right))
-        lchild.height = 1 + max(self.get_height(lchild.left), self.get_height(lchild.right))
+        node.height = 1 + max(self._get_height(node.left), self._get_height(node.right))
+        lchild.height = 1 + max(self._get_height(lchild.left), self._get_height(lchild.right))
 
         return lchild
 
@@ -137,7 +137,7 @@ class AVL:
         else:
             node.right = self._insert(node.right, value)
 
-        node.height = max(self.get_height(node.left), self.get_height(node.right)) + 1
+        node.height = max(self._get_height(node.left), self._get_height(node.right)) + 1
 
         return self._update_balance(node, value)
 
@@ -147,10 +147,8 @@ class AVL:
             return False
         node = self._search(self.root, value)
         if node:
-            logging.debug('Node found.')
             return node
         else:
-            logging.debug('Node not found.')
             return False
 
     def _search(self, node, value):
@@ -202,7 +200,7 @@ class AVL:
             node.right = self._delete(node.right, temp.value)
 
         # Update the heights of the node after deletion
-        node.height = 1 + max(self.get_height(node.left), self.get_height(node.right))
+        node.height = 1 + max(self._get_height(node.left), self._get_height(node.right))
 
         # Rebalance the node
         return self._update_balance(node, node.value)
@@ -282,19 +280,24 @@ class AVL:
         return op
 
 def main():
-    b = [i for i in range(10)]
+    b = list(range(10))
     avl = AVL(b)
 
     print(avl)
-    print(avl.search(4)) # node
-    print(avl.search(7)) # False
+    assert avl.search(4).value == 4 # 4 is present in the tree.
+    assert avl.search(10) == False  # 10 is not present in the tree.
 
-    avl.delete(7)
+    avl.delete(7) # deleting 7 from the tree.
+    print(avl)
+
+    avl.insert(2) # inserting 2 in the tree.
     print(avl)
 
     print(avl.in_order())
     print(avl.post_order())
     print(avl.pre_order())
+
+    assert avl.height() == 4
 
 if __name__ == '__main__':
     main()
